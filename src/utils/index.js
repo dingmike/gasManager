@@ -2,6 +2,10 @@
  * Created by jiachenpan on 16/11/18.
  */
 
+export function parseDateRange(type) {
+  debugger
+}
+
 export function parseTime(time, cFormat) {
   if (arguments.length === 0) {
     return null
@@ -288,4 +292,8 @@ export function uniqueArr(arr) {
 
 export function isExternal(path) {
   return /^(https?:|mailto:|tel:)/.test(path)
+}
+
+export function parseToDate(source) {
+  return source.substring(0, 10)
 }
