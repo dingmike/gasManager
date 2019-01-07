@@ -62,7 +62,10 @@ export default {
     theme: 'Theme',
     clipboardDemo: 'Clipboard',
     i18n: 'I18n',
-    externalLink: 'External Link'
+    externalLink: 'External Link',
+    GasPriceManage: '油价管理',
+    UnifiedPrice: '统一变价',
+    PointPrice: '定点变价'
   },
   navbar: {
     logOut: 'Log Out',
