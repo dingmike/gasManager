@@ -26,11 +26,16 @@
       highlight-current-row
       style="width: 100%;"
       @sort-change="sortChange">
-      <el-table-column label="油品编号" prop="oil_id" sortable="custom" align="center" width="200">
+      <!--<el-table-column label="编号" prop="id" sortable="custom" align="center" width="100">
+        <template slot-scope="scope">
+          <span>{{ scope.row.id }}</span>
+        </template>
+      </el-table-column>-->
+      <!--<el-table-column label="油品编号" prop="oil_id" sortable="custom" align="center" width="200">
         <template slot-scope="scope">
           <span>{{ scope.row.oil_id }}</span>
         </template>
-      </el-table-column>
+      </el-table-column>-->
       <el-table-column label="油品名称" width="200px" align="center">
         <template slot-scope="scope">
           <span>{{ scope.row.oil_name }}</span>
@@ -57,7 +62,7 @@
       <el-table-column label="执行时间" width="200px">
         <template slot-scope="scope">
           <!--<span>{{ scope.row.oil_change_date | parseTime('{y}-{m}-{d} {h}:{i}') }}</span>-->
-          <span>{{ scope.row.oil_change_date | parseToDate }}</span>
+          <span>{{ scope.row.oil_change_date }}</span>
         </template>
       </el-table-column>
       <!--<el-table-column :label="$t('table.readings')" align="center" width="95">
@@ -78,7 +83,7 @@
           </el-button>
           <el-button v-if="scope.row.status!='draft'" size="mini" @click="handleModifyStatus(scope.row,'draft')">{{ $t('table.draft') }}
           </el-button>-->
-          <el-button size="mini" type="danger" @click="handleModifyStatus(scope.row,'deleted')">{{ $t('table.delete') }}
+          <el-button size="mini" type="danger" @click="handleDelete(scope.row,'delete')">{{ $t('table.delete') }}
           </el-button>
         </template>
       </el-table-column>
@@ -88,18 +93,21 @@
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="tempDate" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
         <el-form-item label="变更油品" prop="gasType">
-          <el-select v-model="tempDate.gasType" class="filter-item" placeholder="选择油品">
-            <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name" :value="item.key"/>
+          <el-select v-model="tempDate.oil_id" :disabled="disabledNow" value-key="name" class="filter-item" placeholder="选择油品">
+            <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.name" :value="item.key"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="变价价格" prop="modifyPrice">
-          <el-input-number v-model="tempDate.modifyPrice" :min="1" :step="0.1" :max="100" controls-position="right" />
+        <el-form-item label="更新价格" prop="oil_base_price">
+          <el-input-number v-model="tempDate.oil_base_price" :min="1" :step="0.1" :max="100" controls-position="right"/>
+          <span>（例如：6.4）</span>
         </el-form-item>
-        <el-form-item label="变价日期" prop="modifyDate">
+        <el-form-item label="变价日期" prop="oil_change_date">
           <el-date-picker
-            v-model="tempDate.modifyDate"
+            v-model="tempDate.oil_change_date"
             type="date"
-            placeholder="选择变价日期"/>
+            placeholder="选择变价日期"
+            format="yyyy-MM-dd"
+            value-format="yyyy-MM-dd"/>
         </el-form-item>
         <!--<el-form-item :label="$t('table.status')">
           <el-select v-model="temp.status" class="filter-item" placeholder="Please select">
@@ -115,7 +123,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">{{ $t('table.cancel') }}</el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">{{ $t('table.confirm') }}</el-button>
+        <el-button type="primary" @click="createData">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
 
@@ -129,24 +137,36 @@
       </span>
     </el-dialog>
 
+    <el-dialog
+      :before-close="handleClose"
+      :visible.sync="dialogDeleteVisible"
+      title="提示"
+      width="30%">
+      <span>确定要删除吗？</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogDeleteVisible = false">取 消</el-button>
+        <el-button type="primary" @click="removeRow">确 定</el-button>
+      </span>
+    </el-dialog>
+
   </div>
 </template>
 
 <script>
-import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/gasPriceManage'
+import { fetchList, createUnifiedPrice, fetchPv } from '@/api/gasPriceManage'
 import waves from '@/directive/waves' // Waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const calendarTypeOptions = [
-  { key: '4', display_name: '92号汽油（V）' },
-  { key: '22', display_name: '95号汽油（V）' },
-  { key: '13', display_name: '98号汽油（V）' }
+  { key: '22', name: '92号汽油（V）' },
+  { key: '13', name: '95号汽油（V）' },
+  { key: '4', name: '98号汽油（V）' }
 ]
 
 // arr to obj ,such as { CN : "China", US : "USA" }
 const calendarTypeKeyValue = calendarTypeOptions.reduce((acc, cur) => {
-  acc[cur.key] = cur.display_name
+  acc[cur.key] = cur.name
   return acc
 }, {})
 
@@ -174,6 +194,7 @@ export default {
       list: null,
       total: 0,
       listLoading: true,
+      disabledNow: false,
       listQuery: {
         pageNum: 1,
         pageSize: 10,
@@ -189,20 +210,31 @@ export default {
       statusOptions: ['published', 'draft', 'deleted'],
       showReviewer: false,
       temp: { // 提交变更油价信息
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        type: '',
-        status: 'published'
+        id: '',
+        oil_id: '',
+        oil_name: '',
+        oil_base_price: '',
+        oil_change_date: '',
+        oil_change_no: ''
       },
+      tempAllData: {
+        dataType: 1,
+        method: 'add'
+      },
+      deleteRowData: {},
       tempDate: { // 提交变更油价信息
-        gasType: '',
-        modifyPrice: 7.4,
-        modifyDate: new Date()
+        id: 0,
+        oil_id: '',
+        oil_name: 'sdfds',
+        oil_base_price: '',
+        oil_change_date: '',
+        oil_change_no: 1
+        // gasType: '',
+        // modifyPrice: 7.4,
+        // modifyDate: new Date()
       },
       dialogFormVisible: false,
+      dialogDeleteVisible: false,
       dialogStatus: '',
       textMap: {
         update: '编辑',
@@ -223,6 +255,7 @@ export default {
   },
   methods: {
     getList() {
+      debugger
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
         debugger
@@ -235,6 +268,7 @@ export default {
         }, 1.5 * 1000)
       })
     },
+
     handleFilter() {
       this.listQuery.pageNum = 1
       this.getList()
@@ -261,16 +295,17 @@ export default {
       this.handleFilter()
     },
     resetTemp() {
-      this.temp = {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        status: 'published',
-        type: ''
+      debugger
+      this.tempDate = {
+        id: 0,
+        oil_id: '',
+        oil_name: '',
+        oil_base_price: '',
+        oil_change_date: '',
+        oil_change_no: 1
       }
     },
+    handleClose() {},
     handleCreate() {
       this.resetTemp()
       this.dialogStatus = 'create'
@@ -281,64 +316,90 @@ export default {
     },
     createData() {
       this.$refs['dataForm'].validate((valid) => {
+        console.log(this.tempAllData.method)
         if (valid) {
-          this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
-          this.temp.author = 'vue-element-admin'
-          createArticle(this.temp).then(() => {
-            this.list.unshift(this.temp)
-            this.dialogFormVisible = false
-            this.$notify({
-              title: '成功',
-              message: '创建成功',
-              type: 'success',
-              duration: 2000
-            })
+          // this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
+          // this.tempData.author = 'vue-element-admin'
+          this.tempAllData.model_info = this.tempDate
+          // 提交数据
+          createUnifiedPrice(this.tempAllData).then((res) => {
+            debugger
+            if (res.data.result === '0') {
+              this.dialogFormVisible = false
+              this.$notify({
+                title: '成功',
+                message: '创建成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.getList()
+            } else {
+              this.$notify({
+                title: '提示',
+                message: '添加失败',
+                type: 'warning',
+                duration: 2000
+              })
+            }
+            // this.list.unshift(this.tempAllData)
+            // this.dialogFormVisible = false
+            // this.$notify({
+            //   title: '成功',
+            //   message: '创建成功',
+            //   type: 'success',
+            //   duration: 2000
+            // })
           })
         }
       })
     },
     handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
+      this.tempDate = Object.assign({}, row) // copy obj
+      console.log(this.tempDate)
+      this.disabledNow = true
+      this.tempDate.oil_id = this.tempDate.oil_id.toString() // 渲染默认值
       this.dialogStatus = 'update'
+      this.tempAllData.method = 'edit'
       this.dialogFormVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+      console.log(this.tempAllData.method)
     },
-    updateData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          const tempData = Object.assign({}, this.temp)
-          tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
-            for (const v of this.list) {
-              if (v.id === this.temp.id) {
-                const index = this.list.indexOf(v)
-                this.list.splice(index, 1, this.temp)
-                break
-              }
-            }
-            this.dialogFormVisible = false
-            this.$notify({
-              title: '成功',
-              message: '更新成功',
-              type: 'success',
-              duration: 2000
-            })
+    handleDelete(row, method) {
+      this.deleteRowData = { dataType: 1, method: 'delete', model_info: { id: row.id }}
+      this.dialogDeleteVisible = true
+    },
+    removeRow() {
+      // let tempData = { dataType: 1, method: 'delete', model_info: { id: row.id }}
+      createUnifiedPrice(this.deleteRowData).then((res) => {
+        if (res.data.result === '0') {
+          this.deleteRowData = {}
+          this.dialogDeleteVisible = false
+          this.$notify({
+            title: '成功',
+            message: '删除成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.getList()
+        } else {
+          this.$notify({
+            title: '提示',
+            message: '删除失败',
+            type: 'warning',
+            duration: 2000
           })
         }
+        // this.list.unshift(this.tempAllData)
+        // this.dialogFormVisible = false
+        // this.$notify({
+        //   title: '成功',
+        //   message: '创建成功',
+        //   type: 'success',
+        //   duration: 2000
+        // })
       })
-    },
-    handleDelete(row) {
-      this.$notify({
-        title: '成功',
-        message: '删除成功',
-        type: 'success',
-        duration: 2000
-      })
-      const index = this.list.indexOf(row)
-      this.list.splice(index, 1)
     },
     handleFetchPv(pv) {
       fetchPv(pv).then(response => {

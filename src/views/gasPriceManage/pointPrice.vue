@@ -83,7 +83,7 @@
           </el-button>
           <el-button v-if="scope.row.status!='draft'" size="mini" @click="handleModifyStatus(scope.row,'draft')">{{ $t('table.draft') }}
           </el-button>-->
-          <el-button size="mini" type="danger" @click="handleModifyStatus(scope.row,'deleted')">{{ $t('table.delete') }}
+          <el-button size="mini" type="danger" @click="handleDelete(scope.row,'delete')">{{ $t('table.delete') }}
           </el-button>
         </template>
       </el-table-column>
@@ -92,47 +92,65 @@
     <pagination v-show="total>0" :total="total" :page.sync="listQuery.pageNum" :limit.sync="listQuery.pageSize" @pagination="getList" />
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="tempDate" label-position="left" label-width="100px" style="width: 800px; margin-left:50px;">
-        <el-form-item label="加油站名称" prop="gasStationName">
-          <el-select v-model="tempDate.province" placeholder="请选择省份">
-            <el-option v-for="item in provinceOptions" :key="item.key" :label="item.display_name" :value="item.key"/>
+        <el-form-item label="加油站名称" prop="oil_station_id">
+          <el-input
+            v-show="!showSelect"
+            v-model="tempDate.oil_station_name"
+            :disabled="true"
+            placeholder="" />
+          <el-input
+            v-model="tempDate.oil_station_id"
+            :disabled="true"
+            style="display: none"
+            placeholder="请输入内容" />
+          <el-select v-show="showSelect" v-model="tempDate.province_id" filterable placeholder="请选择省份" @change="getCityList">
+            <el-option v-for="item in provinceOptions" :key="item.id" :label="item.province_name" :value="item.id"/>
           </el-select>
           <el-select
-            v-model="tempDate.city"
+            v-show="showSelect"
+            v-model="tempDate.city_id"
+            filterable
             style="margin-left: 20px;"
-            placeholder="请选择城市">
-            <el-option v-for="item in cityOptions" :key="item.key" :label="item.display_name" :value="item.key"/>
+            placeholder="请选择城市"
+            @change="getStationList">
+            <el-option v-for="item in cityOptions" :key="item.id" :label="item.city_name" :value="item.id"/>
           </el-select>
           <el-select
-            v-model="tempDate.gasStationName"
+            v-show="showSelect"
+            v-model="tempDate.oil_station_id"
+            filterable
             style="margin-left: 20px;"
             placeholder="请选择加油站">
-            <el-option v-for="item in gasStationOptions" :key="item.key" :label="item.display_name" :value="item.key"/>
+            <el-option v-for="item in gasStationOptions" :key="item.id" :label="item.station_name" :value="item.id"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="油品型号" prop="modifyPrice">
-          <el-select v-model="tempDate.gasType" class="filter-item" placeholder="选择油品">
-            <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.display_name" :value="item.key"/>
+        <el-form-item label="油品型号" prop="oil_id">
+          <el-select v-model="tempDate.oil_id" class="filter-item" placeholder="选择油品">
+            <el-option v-for="item in calendarTypeOptions" :key="item.key" :label="item.name" :value="item.key"/>
           </el-select>
         </el-form-item>
-        <el-form-item label="变价价格" prop="modifyPrice">
-          <el-input-number v-model="tempDate.modifyPrice" :min="0" :step="0.1" :max="1" controls-position="right" />
+        <el-form-item label="变价价格" prop="oil_coupon_price">
+          <el-input-number v-model="tempDate.oil_coupon_price" :min="-1" :step="0.1" :max="1" controls-position="right" />
+          <span>变动价格(-1.00~1.00)</span>
         </el-form-item>
         <el-form-item label="变价规则" prop="modifyDate">
-          <el-select v-model="tempDate.modifyRule" class="filter-item" placeholder="选择变价规则" @change="handleChangeRule" >
+          <el-select v-model="tempDate.oil_coupon_type" class="filter-item" placeholder="选择变价规则" @change="handleChangeRule" >
             <el-option v-for="item in modifyRules" :key="item.key" :label="item.display_name" :value="item.key"/>
           </el-select>
         </el-form-item>
-        <el-form-item v-if="showModifyInput" label="定时变价规则" prop="sureTimeRule">
+        <!--<el-form-item v-if="showModifyInput" label="定时变价规则" prop="sureTimeRule">
           <el-select v-model="tempDate.sureTimeRule" class="filter-item" placeholder="选择变价规则" @change="handleChangeRule" >
             <el-option v-for="item in modifySureTimeRules" :key="item.key" :label="item.display_name" :value="item.key"/>
           </el-select>
-        </el-form-item>
+        </el-form-item>-->
         <el-form-item v-if="showSureTimeInput" label="变价日期区间" prop="modifyDate">
           <el-date-picker
             v-model="tempDate.modifyDate"
             :picker-options="pickerOptions2"
             type="daterange"
             align="right"
+            format="yyyy-MM-dd"
+            value-format="yyyy-MM-dd"
             unlink-panels
             range-separator="至"
             start-placeholder="开始日期"
@@ -152,7 +170,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">{{ $t('table.cancel') }}</el-button>
-        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">{{ $t('table.confirm') }}</el-button>
+        <el-button type="primary" @click="createData">{{ $t('table.confirm') }}</el-button>
       </div>
     </el-dialog>
 
@@ -165,20 +183,30 @@
         <el-button type="primary" @click="dialogPvVisible = false">{{ $t('table.confirm') }}</el-button>
       </span>
     </el-dialog>
-
+    <el-dialog
+      :before-close="handleClose"
+      :visible.sync="dialogDeleteVisible"
+      title="提示"
+      width="30%">
+      <span>确定要删除吗？</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogDeleteVisible = false">取 消</el-button>
+        <el-button type="primary" @click="removeRow">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import { fetchList, fetchPv, createArticle, updateArticle } from '@/api/gasPriceManage'
+import { fetchList, fetchPv, createUnifiedPrice, fetchStations } from '@/api/gasPriceManage'
 import waves from '@/directive/waves' // Waves directive
 import { parseTime } from '@/utils'
 import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 
 const calendarTypeOptions = [
-  { key: '4', display_name: '92号汽油（V）' },
-  { key: '22', display_name: '95号汽油（V）' },
-  { key: '13', display_name: '98号汽油（V）' }
+  { key: '22', name: '92号汽油（V）' },
+  { key: '13', name: '95号汽油（V）' },
+  { key: '4', name: '98号汽油（V）' }
 ]
 
 // arr to obj ,such as { CN : "China", US : "USA" }
@@ -221,7 +249,7 @@ export default {
           onClick(picker) {
             const end = new Date()
             const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+            end.setTime(start.getTime() + 3600 * 1000 * 24 * 7)
             picker.$emit('pick', [start, end])
           }
         }, {
@@ -229,7 +257,7 @@ export default {
           onClick(picker) {
             const end = new Date()
             const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+            end.setTime(start.getTime() + 3600 * 1000 * 24 * 30)
             picker.$emit('pick', [start, end])
           }
         }, {
@@ -237,7 +265,7 @@ export default {
           onClick(picker) {
             const end = new Date()
             const start = new Date()
-            start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+            end.setTime(start.getTime() + 3600 * 1000 * 24 * 90)
             picker.$emit('pick', [start, end])
           }
         }]
@@ -257,6 +285,12 @@ export default {
         // type: undefined,
         // sort: '+id'
       },
+      showSelect: true,
+      stationQuery: {
+        dataType: 1, // 1 province, 2 city, 3 station
+        province_id: '',
+        city_id: ''
+      },
       provinceOptions: [
         { key: '1', display_name: '四川' },
         { key: '2', display_name: '广东' }
@@ -270,8 +304,9 @@ export default {
         { key: '2', display_name: '飞云加油站' }
       ],
       modifyRules: [
-        { key: '1', display_name: '定时变价' },
-        { key: '2', display_name: '不定时变价' } // 需要选择时间区间
+        { key: '1', display_name: '周一至周五' },
+        { key: '2', display_name: '周二至周四' }, // 需要选择时间区间
+        { key: '3', display_name: '自定义' } // 需要选择时间区间
       ],
       modifySureTimeRules: [
         { key: '1', display_name: '周一至周五' },
@@ -292,15 +327,29 @@ export default {
         status: 'published'
       },
       tempDate: { // 提交定点变更油价信息
-        gasType: '', // 油品型号
-        province: '',
-        city: '',
-        gasStationName: '', // 加油站名称
-        modifyPrice: 0, // 变价价格
-        modifyRule: '', // 变价规则
-        sureTimeRule: '', // 定时变价规则
-        modifyDate: new Date() // 变价日期区间
+        id: 0,
+        oil_station_id: '',
+        oil_station_name: '', // 加油站名称
+        oil_id: '', // 油品型号id
+        oil_name: '',
+        oil_base_price: '',
+        oil_coupon_price: '', // 变价价格
+        oil_coupon_type: '', // 变价规则 1：周一至周五；2周二至周四；3：选择日期区间
+        coupon_begin_date: '', // 变价日期区间开始日期
+        coupon_begin_time: '',
+        coupon_end_date: '', // 变价日期区间结束日期
+        coupon_end_time: '',
+        oil_station_status: 1, // 是否启用 1启用，0关闭
+        province_id: '',
+        city_id: '',
+        modifyDate: ''// 变价日期区间
       },
+      tempAllData: {
+        dataType: 2, // 定点变价2
+        method: 'add'
+      },
+      deleteRowData: {},
+      dialogDeleteVisible: false,
       dialogFormVisible: false,
       dialogStatus: '',
       textMap: {
@@ -319,18 +368,61 @@ export default {
   },
   created() {
     this.getList()
+    this.getProvinceList()
   },
   methods: {
+    chooseProvince() {
+      this.getStationList()
+    },
     getList() {
       this.listLoading = true
       fetchList(this.listQuery).then(response => {
         this.list = response.data.data
         this.total = response.data.total_count
-
         // Just to simulate the time of the request
-        setTimeout(() => {
-          this.listLoading = false
-        }, 1.5 * 1000)
+        this.listLoading = false
+      })
+    },
+    handleClose() {},
+    getProvinceList() {
+      debugger
+      this.listLoading = true
+      // this.cityOptions.length = 0
+      // this.gasStationOptions.length = 0
+      fetchStations(this.stationQuery).then(response => {
+        debugger
+        this.provinceOptions = response.data.data
+        // Just to simulate the time of the request
+        this.listLoading = false
+      })
+    },
+    getCityList(provinceId) {
+      debugger
+      this.tempDate.city_id = ''
+      this.tempDate.oil_station_id = ''
+      if (provinceId) {
+        this.stationQuery.dataType = 2
+        this.stationQuery.province_id = provinceId
+      }
+      this.listLoading = true
+      fetchStations(this.stationQuery).then(response => {
+        this.cityOptions = response.data.data
+        // Just to simulate the time of the request
+        this.listLoading = false
+      })
+    },
+    getStationList(cityId) {
+      this.tempDate.oil_station_id = ''
+      if (cityId) {
+        this.stationQuery.dataType = 3
+        this.stationQuery.province_id = this.tempDate.province_id
+        this.stationQuery.city_id = cityId
+      }
+      this.listLoading = true
+      fetchStations(this.stationQuery).then(response => {
+        this.gasStationOptions = response.data.data
+        // Just to simulate the time of the request
+        this.listLoading = false
       })
     },
     handleFilter() {
@@ -359,84 +451,121 @@ export default {
       this.handleFilter()
     },
     resetTemp() {
-      this.temp = {
-        id: undefined,
-        importance: 1,
-        remark: '',
-        timestamp: new Date(),
-        title: '',
-        status: 'published',
-        type: ''
+      this.tempDate = {
+        id: 0,
+        oil_station_id: '',
+        oil_station_name: '', // 加油站名称
+        oil_id: '', // 油品型号id
+        oil_name: '',
+        oil_base_price: '',
+        oil_coupon_price: '', // 变价价格
+        oil_coupon_type: '', // 变价规则 1：周一至周五；2周二至周四；3：选择日期区间
+        coupon_begin_date: '', // 变价日期区间开始日期
+        coupon_begin_time: '',
+        coupon_end_date: '', // 变价日期区间结束日期
+        coupon_end_time: '',
+        oil_station_status: 1, // 是否启用 1启用，0关闭
+        province_id: '',
+        city_id: '',
+        modifyDate: ''// 变价日期区间
       }
     },
     handleCreate() {
       this.resetTemp()
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
+      this.showSelect = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
     },
     createData() {
       this.$refs['dataForm'].validate((valid) => {
+        console.log(this.tempAllData.method)
         if (valid) {
-          this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
-          this.temp.author = 'vue-element-admin'
-          createArticle(this.temp).then(() => {
-            this.list.unshift(this.temp)
-            this.dialogFormVisible = false
-            this.$notify({
-              title: '成功',
-              message: '创建成功',
-              type: 'success',
-              duration: 2000
-            })
+          // this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
+          // this.tempData.author = 'vue-element-admin'
+          this.tempAllData.model_info = this.tempDate
+          // 提交数据
+          createUnifiedPrice(this.tempAllData).then((res) => {
+            if (res.data.result === '0') {
+              this.dialogFormVisible = false
+              this.$notify({
+                title: '成功',
+                message: '创建成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.getList()
+            } else {
+              this.$notify({
+                title: '提示',
+                message: res.data.message,
+                type: 'warning',
+                duration: 2500
+              })
+            }
+            // this.list.unshift(this.tempAllData)
+            // this.dialogFormVisible = false
+            // this.$notify({
+            //   title: '成功',
+            //   message: '创建成功',
+            //   type: 'success',
+            //   duration: 2000
+            // })
           })
         }
       })
     },
     handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
+      this.tempDate = Object.assign({}, row) // copy obj
+      console.log(this.tempDate)
+      this.showSelect = false
+      this.tempDate.oil_id = this.tempDate.oil_id.toString() // 渲染默认值
+      this.tempDate.oil_station_id = this.tempDate.oil_station_id.toString() // 渲染默认值
+      this.tempDate.oil_coupon_type = this.tempDate.oil_coupon_type.toString() // 渲染默认值
       this.dialogStatus = 'update'
+      this.tempAllData.method = 'edit'
       this.dialogFormVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+      console.log(this.tempAllData.method)
     },
-    updateData() {
-      this.$refs['dataForm'].validate((valid) => {
-        if (valid) {
-          const tempData = Object.assign({}, this.temp)
-          tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-          updateArticle(tempData).then(() => {
-            for (const v of this.list) {
-              if (v.id === this.temp.id) {
-                const index = this.list.indexOf(v)
-                this.list.splice(index, 1, this.temp)
-                break
-              }
-            }
-            this.dialogFormVisible = false
-            this.$notify({
-              title: '成功',
-              message: '更新成功',
-              type: 'success',
-              duration: 2000
-            })
+    handleDelete(row, method) {
+      this.deleteRowData = { dataType: 2, method: 'delete', model_info: { id: row.id }}
+      this.dialogDeleteVisible = true
+    },
+    removeRow() {
+      // let tempData = { dataType: 1, method: 'delete', model_info: { id: row.id }}
+      createUnifiedPrice(this.deleteRowData).then((res) => {
+        if (res.data.result === '0') {
+          this.deleteRowData = {}
+          this.dialogDeleteVisible = false
+          this.$notify({
+            title: '成功',
+            message: '删除成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.getList()
+        } else {
+          this.$notify({
+            title: '提示',
+            message: '删除失败',
+            type: 'warning',
+            duration: 2000
           })
         }
+        // this.list.unshift(this.tempAllData)
+        // this.dialogFormVisible = false
+        // this.$notify({
+        //   title: '成功',
+        //   message: '创建成功',
+        //   type: 'success',
+        //   duration: 2000
+        // })
       })
-    },
-    handleDelete(row) {
-      this.$notify({
-        title: '成功',
-        message: '删除成功',
-        type: 'success',
-        duration: 2000
-      })
-      const index = this.list.indexOf(row)
-      this.list.splice(index, 1)
     },
     handleFetchPv(pv) {
       fetchPv(pv).then(response => {
@@ -469,12 +598,10 @@ export default {
     },
     // 变价规则改变
     handleChangeRule(e) {
-      if (this.tempDate.modifyRule === '1') {
-        this.showModifyInput = true
-        this.showSureTimeInput = false
-      } else {
+      if (this.tempDate.oil_coupon_type === '3') {
         this.showSureTimeInput = true
-        this.showModifyInput = false
+      } else {
+        this.showSureTimeInput = false
       }
     }
   }
