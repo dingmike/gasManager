@@ -10,6 +10,7 @@ import Layout from '@/views/layout/Layout'
 import componentsRouter from './modules/components'
 import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
+import gasPriceManageRouter from './modules/gasPriceManage'
 import nestedRouter from './modules/nested'
 
 /** note: Submenu only appear when children.length>=1
@@ -161,6 +162,7 @@ export const asyncRouterMap = [
   chartsRouter,
   nestedRouter,
   tableRouter,
+  gasPriceManageRouter,
 
   {
     path: '/example',
