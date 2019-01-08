@@ -37,19 +37,32 @@
         </span>
       </el-form-item>
 
+      <el-form-item prop="numCode">
+        <el-input
+          :type="numType"
+          v-model="loginForm.numCode"
+          placeholder="输入验证码"
+          name="numCode"
+          auto-complete="on"
+          @keyup.enter.native="handleLogin" />
+        <span class="show-pwd" @click="reloadCode">
+          <img :src="codeImg" alt="">
+        </span>
+      </el-form-item>
+
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">{{ $t('login.logIn') }}</el-button>
 
       <div style="position:relative">
-        <div class="tips">
+        <!--<div class="tips">
           <span>{{ $t('login.username') }} : admin</span>
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
         </div>
         <div class="tips">
           <span style="margin-right:18px;">{{ $t('login.username') }} : editor</span>
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
-        </div>
+        </div>-->
 
-        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>
+        <!--<el-button class="thirdparty-button" type="primary" @click="showDialog=true">{{ $t('login.thirdparty') }}</el-button>-->
       </div>
     </el-form>
 
@@ -88,6 +101,7 @@ export default {
       }
     }
     return {
+      codeImg: 'http://192.168.10.23:9100/Public/GetValidateCode',
       loginForm: {
         username: 'admin',
         password: '1111111'
@@ -97,6 +111,7 @@ export default {
         password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       passwordType: 'password',
+      numType: 'text',
       loading: false,
       showDialog: false,
       redirect: undefined
@@ -117,6 +132,9 @@ export default {
     // window.removeEventListener('hashchange', this.afterQRScan)
   },
   methods: {
+    reloadCode() {
+      this.codeImg = 'http://192.168.10.23:9100/Public/GetValidateCode?' + new Date().getTime()
+    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = ''
@@ -263,7 +281,7 @@ $light_gray:#eee;
   .show-pwd {
     position: absolute;
     right: 10px;
-    top: 7px;
+    top: 11px;
     font-size: 16px;
     color: $dark_gray;
     cursor: pointer;

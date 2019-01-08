@@ -3,7 +3,7 @@
     <switch-roles @change="handleRolesChange" />
     <div :key="key" style="margin-top:30px;">
       <div>
-        <span v-permission="['admin']" class="permission-alert">
+        <span v-permission="roleCheck" class="permission-alert">
           Only
           <el-tag class="permission-tag" size="small">admin</el-tag> can see this
         </span>
@@ -65,7 +65,8 @@ export default{
   directives: { permission },
   data() {
     return {
-      key: 1 // 为了能每次切换权限的时候重新初始化指令
+      key: 1, // 为了能每次切换权限的时候重新初始化指令
+      roleCheck: ['editor']
     }
   },
   methods: {
