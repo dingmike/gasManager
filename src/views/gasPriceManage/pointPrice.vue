@@ -133,7 +133,7 @@
           <el-input-number v-model="tempDate.oil_coupon_price" :min="-1" :step="0.1" :max="1" controls-position="right" />
           <span>变动价格(-1.00~1.00)</span>
         </el-form-item>
-        <el-form-item label="变价规则" prop="modifyDate">
+        <el-form-item label="变价规则" prop="oil_coupon_type">
           <el-select v-model="tempDate.oil_coupon_type" class="filter-item" placeholder="选择变价规则" @change="handleChangeRule" >
             <el-option v-for="item in modifyRules" :key="item.key" :label="item.display_name" :value="item.key"/>
           </el-select>
@@ -156,17 +156,6 @@
             start-placeholder="开始日期"
             end-placeholder="结束日期" />
         </el-form-item>
-        <!--<el-form-item :label="$t('table.status')">
-          <el-select v-model="temp.status" class="filter-item" placeholder="Please select">
-            <el-option v-for="item in statusOptions" :key="item" :label="item" :value="item"/>
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="$t('table.importance')">
-          <el-rate v-model="temp.importance" :colors="['#99A9BF', '#F7BA2A', '#FF9900']" :max="3" style="margin-top:8px;"/>
-        </el-form-item>-->
-        <!--<el-form-item :label="$t('table.remark')">
-          <el-input :autosize="{ minRows: 2, maxRows: 4}" v-model="temp.remark" type="textarea" placeholder="Please input"/>
-        </el-form-item>-->
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">{{ $t('table.cancel') }}</el-button>
@@ -385,19 +374,16 @@ export default {
     },
     handleClose() {},
     getProvinceList() {
-      debugger
       this.listLoading = true
       // this.cityOptions.length = 0
       // this.gasStationOptions.length = 0
       fetchStations(this.stationQuery).then(response => {
-        debugger
         this.provinceOptions = response.data.data
         // Just to simulate the time of the request
         this.listLoading = false
       })
     },
     getCityList(provinceId) {
-      debugger
       this.tempDate.city_id = ''
       this.tempDate.oil_station_id = ''
       if (provinceId) {
@@ -485,6 +471,8 @@ export default {
         if (valid) {
           // this.temp.id = parseInt(Math.random() * 100) + 1024 // mock a id
           // this.tempData.author = 'vue-element-admin'
+          this.tempDate.coupon_begin_date = this.tempDate.modifyDate[0]
+          this.tempDate.coupon_end_date = this.tempDate.modifyDate[1]
           this.tempAllData.model_info = this.tempDate
           // 提交数据
           createUnifiedPrice(this.tempAllData).then((res) => {
@@ -524,9 +512,15 @@ export default {
       this.tempDate.oil_id = this.tempDate.oil_id.toString() // 渲染默认值
       this.tempDate.oil_station_id = this.tempDate.oil_station_id.toString() // 渲染默认值
       this.tempDate.oil_coupon_type = this.tempDate.oil_coupon_type.toString() // 渲染默认值
+      this.tempDate.modifyDate = [this.tempDate.coupon_begin_date, this.tempDate.coupon_end_date]
       this.dialogStatus = 'update'
       this.tempAllData.method = 'edit'
       this.dialogFormVisible = true
+      if (this.tempDate.oil_coupon_type === '3') {
+        this.showSureTimeInput = true
+      } else {
+        this.showSureTimeInput = false
+      }
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
