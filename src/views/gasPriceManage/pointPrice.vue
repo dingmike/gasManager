@@ -293,12 +293,12 @@ export default {
         { key: '2', display_name: '飞云加油站' }
       ],
       modifyRules: [
-        { key: '1', display_name: '周一至周五' },
+        { key: '1', display_name: '周五至周一' },
         { key: '2', display_name: '周二至周四' }, // 需要选择时间区间
         { key: '3', display_name: '自定义' } // 需要选择时间区间
       ],
       modifySureTimeRules: [
-        { key: '1', display_name: '周一至周五' },
+        { key: '1', display_name: '周五至周一' },
         { key: '2', display_name: '周二至周四' }
       ],
       importanceOptions: [1, 2, 3],
@@ -512,7 +512,9 @@ export default {
       this.tempDate.oil_id = this.tempDate.oil_id.toString() // 渲染默认值
       this.tempDate.oil_station_id = this.tempDate.oil_station_id.toString() // 渲染默认值
       this.tempDate.oil_coupon_type = this.tempDate.oil_coupon_type.toString() // 渲染默认值
-      this.tempDate.modifyDate = [this.tempDate.coupon_begin_date, this.tempDate.coupon_end_date]
+      if (this.tempDate.oil_coupon_type === '3') {
+        this.tempDate.modifyDate = [this.tempDate.coupon_begin_date, this.tempDate.coupon_end_date]
+      }
       this.dialogStatus = 'update'
       this.tempAllData.method = 'edit'
       this.dialogFormVisible = true
@@ -592,10 +594,12 @@ export default {
     },
     // 变价规则改变
     handleChangeRule(e) {
-      if (this.tempDate.oil_coupon_type === '3') {
-        this.showSureTimeInput = true
+      debugger
+      const _this = this
+      if (_this.tempDate.oil_coupon_type === '3') {
+        _this.showSureTimeInput = true
       } else {
-        this.showSureTimeInput = false
+        _this.showSureTimeInput = false
       }
     }
   }
