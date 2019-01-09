@@ -40,7 +40,7 @@
       <el-form-item prop="numCode">
         <el-input
           :type="numType"
-          v-model="loginForm.numCode"
+          v-model="loginForm.validateCode"
           placeholder="输入验证码"
           name="numCode"
           auto-complete="on"
@@ -104,7 +104,8 @@ export default {
       codeImg: 'http://192.168.10.23:9100/Public/GetValidateCode',
       loginForm: {
         username: 'admin',
-        password: '1111111'
+        password: '777777',
+        validateCode: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
@@ -152,6 +153,16 @@ export default {
           }).catch(() => {
             this.loading = false
           })
+
+          // this.$store.dispatch('LoginByUsernameCode', this.loginForm).then((res) => {
+          //   debugger
+          //   if (res.result === '0') {
+          //     this.loading = false
+          //     this.$router.push({ path: this.redirect || '/' })
+          //   }
+          // }).catch(() => {
+          //   this.loading = false
+          // })
         } else {
           console.log('error submit!!')
           return false
