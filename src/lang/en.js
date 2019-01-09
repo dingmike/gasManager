@@ -65,7 +65,9 @@ export default {
     externalLink: 'External Link',
     GasPriceManage: '油价管理',
     UnifiedPrice: '统一变价',
-    PointPrice: '定点变价'
+    PointPrice: '定点变价',
+    System: '系统管理',
+    Roles: '角色管理'
   },
   navbar: {
     logOut: 'Log Out',

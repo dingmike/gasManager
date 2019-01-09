@@ -11,6 +11,19 @@ export function loginByUsername(username, password) {
     data
   })
 }
+export function loginByUsernameCode(username, password, validateCode) {
+  const data = {
+    user_name: username,
+    user_pwd: password,
+    validate_code: validateCode
+
+  }
+  return request({
+    url: '/Public/Login',
+    method: 'get',
+    params: data
+  })
+}
 
 export function logout() {
   return request({
@@ -24,6 +37,15 @@ export function getUserInfo(token) {
     url: '/user/info',
     method: 'get',
     params: { token }
+  })
+}
+
+// 获取用户权限信息
+export function getUserInfoPower(userid) {
+  return request({
+    url: '/Public/GetUserPowerList',
+    method: 'get',
+    params: { user_id: userid }
   })
 }
 

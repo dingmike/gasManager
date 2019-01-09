@@ -3,22 +3,22 @@
 import Layout from '@/views/layout/Layout'
 
 const tableRouter = {
-  path: '/gasPriceManage',
+  path: '/system',
   component: Layout,
-  redirect: '/gasPriceManage/complex-table',
-  name: 'GasPriceManage',
+  redirect: '/system/roles',
+  name: 'System',
   meta: {
-    title: 'GasPriceManage',
+    title: 'System',
     icon: 'table',
     roles: ['admin', 'editor', 'Operations Department Daily']
   },
   children: [
     {
-      path: 'unified-price',
-      component: () => import('@/views/gasPriceManage/unifiedPrice'),
-      name: 'UnifiedPrice',
+      path: 'roles',
+      component: () => import('@/views/system/roles'),
+      name: 'Roles',
       meta: {
-        title: 'UnifiedPrice',
+        title: 'Roles',
         roles: ['admin', 'Operations Department Daily']
       }
     },
