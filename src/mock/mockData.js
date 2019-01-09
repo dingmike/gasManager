@@ -1,0 +1,127 @@
+
+const mockData = {
+  treeData: {
+    'code': 0,
+    'msg': '操作成功',
+    'data': [{
+      'id': 'b0edc6861a494b79b97990dc05f0a524',
+      'parentId': '',
+      'path': '0002',
+      'name': '微信',
+      'aliasName': 'Wechat',
+      'type': 'menu',
+      'href': '',
+      'target': '',
+      'icon': '',
+      'isShow': true,
+      'disabled': false,
+      'permission': 'wx',
+      'location': 8,
+      'hasChildren': true,
+      'opBy': '',
+      'opAt': 1467471229,
+      'delFlag': false,
+      'expanded': false,
+      'children': []
+    }, {
+      'id': '02e86a61e99746bea34236ea73dd52a5',
+      'parentId': '',
+      'path': '0003',
+      'name': 'CMS',
+      'aliasName': 'CMS',
+      'type': 'menu',
+      'href': '',
+      'target': '',
+      'icon': '',
+      'isShow': true,
+      'disabled': false,
+      'permission': 'cms',
+      'location': 9,
+      'hasChildren': true,
+      'opBy': '1a19ef09b12344b4a797d6e6dfe7fb29',
+      'opAt': 1468895671,
+      'delFlag': false,
+      'expanded': false,
+      'children': []
+    }, {
+      'id': '238847bfdb8c4646a0c4c9527d3b4be9',
+      'parentId': '',
+      'path': '0001',
+      'name': '系统',
+      'aliasName': 'System',
+      'type': 'menu',
+      'href': '',
+      'target': '',
+      'icon': '',
+      'isShow': true,
+      'disabled': false,
+      'permission': 'sys',
+      'note': '系统',
+      'location': 10,
+      'hasChildren': true,
+      'opBy': '',
+      'opAt': 1541915964,
+      'delFlag': false,
+      'expanded': false,
+      'children': []
+    }]
+  },
+  roleData: {
+    'code': 0,
+    'msg': '操作成功',
+    'data': {
+      'list': [{
+        'id': 'bdf67857e7ff43b99ac42f9746929a6d',
+        'name': '系统管理员',
+        'code': 'sysadmin',
+        'aliasName': 'Sysadmin',
+        'disabled': false,
+        'unitid': '',
+        'note': 'System Admin',
+        'unit': null,
+        'menus': null,
+        'users': null,
+        'opBy': '',
+        'opAt': 1541915965,
+        'delFlag': false
+      }, {
+        'id': 'cc9c32b9dade4fec91dbc275eae6e10f',
+        'name': '大鲨鱼专用',
+        'code': 'wizzer',
+        'aliasName': null,
+        'disabled': false,
+        'unitid': '',
+        'note': null,
+        'unit': null,
+        'menus': null,
+        'users': null,
+        'opBy': '3d276279b50d4bd09ecf835d11f95f13',
+        'opAt': 1541916213,
+        'delFlag': false
+      }, {
+        'id': 'f7c033b320644cc7976d17d914aeafb4',
+        'name': '公共角色',
+        'code': 'public',
+        'aliasName': 'Public',
+        'disabled': false,
+        'unitid': '',
+        'note': 'All user has role',
+        'unit': null,
+        'menus': null,
+        'users': null,
+        'opBy': '',
+        'opAt': 1541915965,
+        'delFlag': false
+      }],
+      'localArrayList': [1],
+      'totalCount': 3,
+      'pageSize': 10,
+      'pageNo': 1,
+      'minPage': 1,
+      'maxPage': 1,
+      'totalPage': 1
+    }
+  }
+}
+
+export default mockData
