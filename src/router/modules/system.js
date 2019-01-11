@@ -10,7 +10,7 @@ const tableRouter = {
   meta: {
     title: 'System',
     icon: 'table',
-    roles: ['admin', 'editor', 'Operations Department Daily']
+    roles: []
   },
   children: [
     {
@@ -19,16 +19,17 @@ const tableRouter = {
       name: 'Roles',
       meta: {
         title: 'Roles',
-        roles: ['admin', 'Operations Department Daily']
+        // roles: ['admin', 'Technology Department']
+        roles: []
       }
     },
     {
-      path: 'point-price',
-      component: () => import('@/views/gasPriceManage/pointPrice'),
-      name: 'PointPrice',
+      path: 'users',
+      component: () => import('@/views/system/userManage'),
+      name: 'Users',
       meta: {
-        title: 'PointPrice',
-        roles: ['admin', 'editor', 'Operations Department Daily']
+        title: 'Users',
+        roles: ['admin', 'Technology Department']
       }
     }
   ]

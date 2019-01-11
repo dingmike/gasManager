@@ -11,6 +11,7 @@ import componentsRouter from './modules/components'
 import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
 import gasPriceManageRouter from './modules/gasPriceManage'
+import system from './modules/system'
 import nestedRouter from './modules/nested'
 
 /** note: Submenu only appear when children.length>=1
@@ -111,6 +112,7 @@ export default new Router({
   routes: constantRouterMap
 })
 
+// 异步路由表
 export const asyncRouterMap = [
   {
     path: '/permission',
@@ -120,7 +122,8 @@ export const asyncRouterMap = [
     meta: {
       title: 'permission',
       icon: 'lock',
-      roles: ['admin', 'editor'] // you can set roles in root nav
+      // roles: ['admin', 'editor', 'Operations Department Daily'] // you can set roles in root nav
+      roles: [] // you can set roles in root nav
     },
     children: [
       {
@@ -129,7 +132,7 @@ export const asyncRouterMap = [
         name: 'PagePermission',
         meta: {
           title: 'pagePermission',
-          roles: ['admin'] // or you can only set roles in sub nav
+          roles: [] // or you can only set roles in sub nav
         }
       },
       {
@@ -163,6 +166,7 @@ export const asyncRouterMap = [
   nestedRouter,
   tableRouter,
   gasPriceManageRouter,
+  system,
 
   {
     path: '/example',
@@ -171,7 +175,8 @@ export const asyncRouterMap = [
     name: 'Example',
     meta: {
       title: 'example',
-      icon: 'example'
+      icon: 'example',
+      roles: ['admin', 'editor'] // you can set roles in root nav
     },
     children: [
       {

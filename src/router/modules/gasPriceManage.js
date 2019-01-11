@@ -10,7 +10,7 @@ const tableRouter = {
   meta: {
     title: 'GasPriceManage',
     icon: 'table',
-    roles: ['admin', 'editor', 'Operations Department Daily']
+    roles: []
   },
   children: [
     {
@@ -19,7 +19,7 @@ const tableRouter = {
       name: 'UnifiedPrice',
       meta: {
         title: 'UnifiedPrice',
-        roles: ['admin', 'Operations Department Daily']
+        roles: []
       }
     },
     {
@@ -28,7 +28,8 @@ const tableRouter = {
       name: 'PointPrice',
       meta: {
         title: 'PointPrice',
-        roles: ['admin', 'editor', 'Operations Department Daily']
+        roles: []
+        // roles: ['admin', 'editor', 'Operations Department Daily', 'Technology Department']
       }
     }
   ]
